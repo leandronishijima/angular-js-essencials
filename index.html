@@ -33,24 +33,32 @@
 	<script src="lib/angular/angular-messages.js"></script>
 	<script>
 		angular.module("listaTelefonica", ["ngMessages"]);
-		angular.module("listaTelefonica").controller("listaTelefonicaCtrl", function ($scope, uppercaseFilter) {
+		angular.module("listaTelefonica").controller("listaTelefonicaCtrl", function ($scope, $http) {
 			$scope.app = "Lista Telefonica";
-			$scope.operadoras = [
-				{nome: "Oi", codigo: 14, categoria: "Celular", preco: 2},
-				{nome: "Vivo", codigo: 15, categoria: "Celular", preco: 1},
-				{nome: "Tim", codigo: 41, categoria: "Celular", preco: 3},
-				{nome: "GVT", codigo: 25, categoria: "Fixo", preco: 1},
-				{nome: "Embratel", codigo: 21, categoria: "Fixo", preco: 2}
-			];
-			$scope.contatos = [
-				{ nome: uppercaseFilter("Pedro"), telefone: "99999999", data: new Date(), operadora: {nome: "Oi", codigo: 14, categoria: "Celular"} },
-				{ nome: uppercaseFilter("Ana"), telefone: "88888888", data: new Date(), operadora: {nome: "Vivo", codigo: 15, categoria: "Celular"} },
-				{ nome: uppercaseFilter("Maria"), telefone: "77777777", data: new Date(), operadora: {nome: "Tim", codigo: 41, categoria: "Celular"} }
-			];
+			$scope.operadoras = [];
+			$scope.contatos = [];
+
+			var carregarContatos = function () {
+				$http.get("http://localhost:3412/contatos").success(function (data) {
+					$scope.contatos = data;
+				}).error(function (data, status) {
+					$scope.message = "Aconteceu um problema: " + data;
+				});
+			};
+
+			var carregarOperadoras = function () {
+				$http.get("http://localhost:3412/operadoras").success(function (data) {
+					$scope.operadoras = data;
+				});
+			};
+
 			$scope.adicionarContato = function (contato) {
-				$scope.contatos.push(angular.copy(contato));
-				delete $scope.contato;
-				$scope.contatoForm.$setPristine();
+				contato.data = new Date();
+				$http.post("http://localhost:3412/contatos", contato).success(function (data) {
+					delete $scope.contato;	
+					$scope.contatoForm.$setPristine();
+					carregarContatos();
+				});
 			};
 			$scope.apagarContatos = function (contatos) {
 				$scope.contatos = contatos.filter(function (contato) {
@@ -67,12 +75,16 @@
                 $scope.criterioDeOrdenacao = campo; 
                 $scope.direcaoDaOrdenacao = !$scope.direcaoDaOrdenacao;
             };
+
+            carregarContatos();
+            carregarOperadoras();
 		});
 	</script>
 </head>
 <body ng-controller="listaTelefonicaCtrl">
 	<div class="jumbotron">
 		<h3>{{app}}</h3>
+		{{message}}
         <input class="form-control" type="text" ng-model="criterioDeBusca" placeholder="O que você está buscando?"/>
 		<table ng-show="contatos.length > 0" class="table">
 			<tr>
@@ -100,8 +112,8 @@
 			</select>
 		</form>
 
-		<div ng-messages="contatoForm.nome.$error" class="alert alert-danger">
-			<div ng-message="required && contatoForm.nome.$dirty" >
+		<div ng-show="contatoForm.nome.$dirty" ng-messages="contatoForm.nome.$error" class="alert alert-danger">
+			<div ng-message="required" >
 				Por favor, preencha o campo nome!
 			</div>
 			<div ng-message="minlength">
