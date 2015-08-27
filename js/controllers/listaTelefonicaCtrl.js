@@ -21,7 +21,7 @@ angular.module("listaTelefonica").controller("listaTelefonicaCtrl", function ($s
 		contato.serial = serialGenerator.generate();
 		contato.data = new Date();
 		contatosAPI.saveContato(contato).success(function (data) {
-			delete $scope.contato;	
+			delete $scope.contato;
 			$scope.contatoForm.$setPristine();
 			carregarContatos();
 		});
@@ -39,9 +39,9 @@ angular.module("listaTelefonica").controller("listaTelefonicaCtrl", function ($s
 			return contato.selecionado;
 		});
 	};
-	
+
     $scope.ordenarPor = function (campo) {
-        $scope.criterioDeOrdenacao = campo; 
+        $scope.criterioDeOrdenacao = campo;
         $scope.direcaoDaOrdenacao = !$scope.direcaoDaOrdenacao;
     };
 
